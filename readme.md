@@ -7,5 +7,5 @@
 Запускаем все, что нужно:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```

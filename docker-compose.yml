@@ -2,9 +2,14 @@ version: '3.7'
 
 services:
   postgis:
+    restart: always
     build: ./postgis
     environment:
       - POSTGRES_PASSWORD=secret
-      - POSTGRES_DB="postgeo"
+      - POSTGRES_DB=postgeo
+      - TZ=GMT+3
+      - PGTZ=GMP+3
     ports:
-      - 5432:5432
+      - 5433:5432
+#    volumes:
+#      - ./postgres-data:/var/lib/postgresql/data
