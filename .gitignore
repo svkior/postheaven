@@ -1,1 +1,4 @@
 postgres-data
+*.csv
+*.pbf
+.ipynb_checkpoints

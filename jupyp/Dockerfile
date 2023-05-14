@@ -15,7 +15,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends build-essential
 
 WORKDIR /pipwork
 
-RUN pipenv install geopy openpyxl pyrosm pygeos geopandas jupyterlab jupyter notebook osmnx tqdm nodejs elasticsearch  ipywidgets
+RUN pipenv install geopy openpyxl pyrosm pygeos geopandas jupyterlab jupyter \
+    notebook osmnx tqdm nodejs elasticsearch  ipywidgets sqlalchemy
 
 RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
 
