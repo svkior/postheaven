@@ -1,17 +1,36 @@
-FROM continuumio/anaconda3
+FROM python:3.9-slim as base
 
-RUN conda create --name mapsgeo python=3.9.7 --yes
-SHELL ["conda", "run", "-n", "mapsgeo", "/bin/bash", "-c"]
+# Setup env
+ENV LANG ru_RU.UTF-8
+ENV LC_ALL ru_RU.UTF-8
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONFAULTHANDLER 1
 
-RUN conda config --set channel_priority false
-RUN conda install -c conda-forge  geopy openpyxl pyrosm pygeos geopandas jupyterlab jupyter notebook osmnx tqdm nodejs elasticsearch --yes
-RUN pip install ipywidgets
-RUN jupyter nbextension enable --py widgetsnbextension
-RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
-RUN pip install h3 ipyleaflet
+FROM base AS python-deps
 
-RUN export HASH=$(python -c "from notebook import auth; print(auth.passwd('secret'))")
-#RUN docker run -it -d -p 8080:8888 -e GEN_CERT=yes jupyter/minimal-notebook start-notebook.sh --NotebookApp.password=${HASH}
+RUN pip install pipenv
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential libgdal-dev
 
-# Run the application
-ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "mapsgeo", "jupyter-lab","--ip=0.0.0.0", "-y" ,"--no-browser", "--port=8880", "--allow-root", "--allow_origin=*", ""]
+WORKDIR /pipwork
+
+RUN pipenv install geopy openpyxl pyrosm pygeos geopandas jupyterlab jupyter notebook osmnx tqdm nodejs elasticsearch  ipywidgets
+
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+
+FROM base AS runtime
+
+# Copy virtual env from python-deps stage
+COPY --from=python-deps /pipwork/.venv /pipwork/.venv
+ENV PATH="/pipwork/.venv/bin:$PATH"
+
+#RUN find /.venv | grep "jupyter-lab" && exit 1
+
+# Create and switch to a new user
+RUN useradd --create-home appuser
+WORKDIR /home/appuser
+USER appuser
+
+# Install application into container
+#COPY . .
+
+ENTRYPOINT jupyter-lab --ip=0.0.0.0 -y --no-browser --port=8880 --allow_origin=* --root_dir=/home/appuser/works
