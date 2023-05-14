@@ -25,8 +25,6 @@ FROM base AS runtime
 COPY --from=python-deps /pipwork/.venv /pipwork/.venv
 ENV PATH="/pipwork/.venv/bin:$PATH"
 
-RUN ogr2ogr
-
 #RUN find /.venv | grep "jupyter-lab" && exit 1
 
 # Create and switch to a new user
