@@ -16,6 +16,8 @@ services:
   jupyt:
     build: ./jupyp
     ports:
-      - 8888:8888
+      - 8880:8880
     environment:
-      -  JUPYTER_TOKEN=secret
+      - JUPYTER_TOKEN=secret
+    volumes:
+      - ./notebooks:/works

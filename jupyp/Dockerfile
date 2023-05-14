@@ -1,35 +1,17 @@
-FROM python:3.10-slim as base
+FROM continuumio/anaconda3
 
-# Setup env
-ENV LANG ru_RU.UTF-8
-ENV LC_ALL ru_RU.UTF-8
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONFAULTHANDLER 1
+RUN conda create --name mapsgeo python=3.9.7 --yes
+SHELL ["conda", "run", "-n", "mapsgeo", "/bin/bash", "-c"]
 
-FROM base AS python-deps
+RUN conda config --set channel_priority false
+RUN conda install -c conda-forge  geopy openpyxl pyrosm pygeos geopandas jupyterlab jupyter notebook osmnx tqdm nodejs elasticsearch --yes
+RUN pip install ipywidgets
+RUN jupyter nbextension enable --py widgetsnbextension
+RUN jupyter labextension install @jupyter-widgets/jupyterlab-manager
+RUN pip install h3 ipyleaflet
 
-# Install pipenv and compilation dependencies
-RUN pip install pipenv
-RUN apt-get update && apt-get install -y --no-install-recommends gcc
-
-# Install python dependencies in /.venv
-COPY Pipfile .
-COPY Pipfile.lock .
-RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
-
-FROM base AS runtime
-
-# Copy virtual env from python-deps stage
-COPY --from=python-deps /.venv /.venv
-ENV PATH="/.venv/bin:$PATH"
-
-# Create and switch to a new user
-RUN useradd --create-home appuser
-WORKDIR /home/appuser
-USER appuser
-
-# Install application into container
-COPY . .
+RUN export HASH=$(python -c "from notebook import auth; print(auth.passwd('secret'))")
+#RUN docker run -it -d -p 8080:8888 -e GEN_CERT=yes jupyter/minimal-notebook start-notebook.sh --NotebookApp.password=${HASH}
 
 # Run the application
-ENTRYPOINT ["jupyter", "notebook", "--allow-root", "-y" ,"--no-browser", "--ip=0.0.0.0"]
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "mapsgeo", "jupyter-lab","--ip=0.0.0.0", "-y" ,"--no-browser", "--port=8880", "--allow-root", "--allow_origin=*", ""]
