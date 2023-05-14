@@ -6,6 +6,8 @@ ENV LC_ALL ru_RU.UTF-8
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONFAULTHANDLER 1
 
+RUN apt-get update && apt-get install -y gdal-bin
+
 FROM base AS python-deps
 
 RUN pip install pipenv
@@ -22,6 +24,8 @@ FROM base AS runtime
 # Copy virtual env from python-deps stage
 COPY --from=python-deps /pipwork/.venv /pipwork/.venv
 ENV PATH="/pipwork/.venv/bin:$PATH"
+
+RUN ogr2ogr
 
 #RUN find /.venv | grep "jupyter-lab" && exit 1
 
